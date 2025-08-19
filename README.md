@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+🚀 Landing Page VSL - Robert
 
-## Getting Started
+Este projeto é uma Landing Page (LP) no formato VSL desenvolvida para Robert, com foco em conversão e apresentação clara da oferta.
+A página segue boas práticas de performance, SEO e design responsivo.
 
-First, run the development server:
+📌 Funcionalidades
 
-```bash
+Estrutura otimizada para alta conversão (copywriting + VSL).
+
+Suporte a vídeo incorporado (player otimizado).
+
+Design responsivo (desktop, tablet e mobile).
+
+Integração com formulário de captura (ex.: leads, contato, inscrição).
+
+Carregamento rápido com otimização de imagens e assets.
+
+SEO básico configurado.
+
+🛠️ Tecnologias Utilizadas
+
+Next.js
+ – Framework React para renderização híbrida (SSR/SSG).
+
+React – Biblioteca para criação de interfaces.
+
+Tailwind CSS – Estilização responsiva e otimizada.
+
+TypeScript – Tipagem estática para maior confiabilidade do código.
+
+Framer Motion – Animações suaves e modernas.
+
+Vercel (ou VPS Hostinger) – Deploy e hospedagem da aplicação.
+
+📂 Estrutura do Projeto
+├── public/           # Arquivos públicos (imagens, ícones, etc.)
+├── src/
+│   ├── components/   # Componentes reutilizáveis (Header, Footer, CTA, etc.)
+│   ├── pages/        # Estrutura de rotas (Next.js Pages)
+│   ├── styles/       # Estilos globais
+│   ├── utils/        # Funções auxiliares
+│   └── hooks/        # Hooks customizados
+└── package.json      # Dependências do projeto
+
+⚙️ Como Rodar o Projeto
+
+Clonar o repositório
+
+git clone https://github.com/seu-repo/robert-vsl-landing.git
+cd robert-vsl-landing
+
+
+Instalar dependências
+
+npm install
+# ou
+yarn install
+
+
+Rodar em modo de desenvolvimento
+
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Build de produção
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+npm run build
+npm start
 
-## Learn More
+🚀 Deploy
 
-To learn more about Next.js, take a look at the following resources:
+Vercel: Deploy com um clique usando integração do GitHub.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Hostinger VPS: Build gerado em /out ou rodando como app Node.js.
