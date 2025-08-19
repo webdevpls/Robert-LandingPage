@@ -32,16 +32,6 @@ Framer Motion – Animações suaves e modernas.
 
 Vercel (ou VPS Hostinger) – Deploy e hospedagem da aplicação.
 
-📂 Estrutura do Projeto
-├── public/           # Arquivos públicos (imagens, ícones, etc.)
-├── src/
-│   ├── components/   # Componentes reutilizáveis (Header, Footer, CTA, etc.)
-│   ├── pages/        # Estrutura de rotas (Next.js Pages)
-│   ├── styles/       # Estilos globais
-│   ├── utils/        # Funções auxiliares
-│   └── hooks/        # Hooks customizados
-└── package.json      # Dependências do projeto
-
 ⚙️ Como Rodar o Projeto
 
 Clonar o repositório
