@@ -1,29 +1,29 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import Script from "next/script";
+
+// Tipagem segura para o Meta Pixel
+type FBQ = (...args: unknown[]) => void;
 
 declare global {
   interface Window {
-    fbq?: (...args: any[]) => void;
-    YT?: any;
-    onYouTubeIframeAPIReady?: () => void;
+    fbq?: FBQ;
   }
 }
 
 export default function Landing() {
-  const playerRef = useRef<any>(null);
+  const videoRef = useRef<HTMLIFrameElement | null>(null);
   const [buttonEnabled, setButtonEnabled] = useState(false);
-  const startedRef = useRef(false);
-  const ctaUnlockedRef = useRef(false);
+  const startedRef = useRef<boolean>(false);
+  const ctaUnlockedRef = useRef<boolean>(false);
 
-  // Lógica disparada quando o vídeo realmente começa (estado PLAYING)
-  const onPlayerStateChange = (event: any) => {
-    if (event.data === window.YT?.PlayerState.PLAYING && !startedRef.current) {
+  const onPlay = () => {
+    if (!startedRef.current) {
       startedRef.current = true;
       window.fbq?.("trackCustom", "VideoPlay");
 
-      // libera CTA após 10 segundos de reprodução
+      // inicia contador de 10s só depois do "play" (aqui ainda está no onLoad do iframe; ver nota abaixo)
       setTimeout(() => {
         if (!ctaUnlockedRef.current) {
           ctaUnlockedRef.current = true;
@@ -33,24 +33,6 @@ export default function Landing() {
       }, 10000);
     }
   };
-
-  useEffect(() => {
-    // Função chamada quando API do YouTube estiver pronta
-    window.onYouTubeIframeAPIReady = () => {
-      playerRef.current = new window.YT.Player("yt-player", {
-        videoId: "3hSPuxqynVk",
-        playerVars: { playsinline: 1 },
-        events: {
-          onStateChange: onPlayerStateChange,
-        },
-      });
-    };
-
-    // Carrega o script da API de forma assincrônica
-    const tag = document.createElement("script");
-    tag.src = "https://www.youtube.com/iframe_api";
-    document.head.appendChild(tag);
-  }, []);
 
   const handleCTA = () => {
     window.fbq?.("track", "Lead");
@@ -102,7 +84,15 @@ export default function Landing() {
         {/* Video Card */}
         <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-4 shadow-2xl shadow-black/30">
           <div className="overflow-hidden rounded-xl ring-1 ring-white/10">
-            <div id="yt-player" className="w-full h-[400px]" />
+            <iframe
+              ref={videoRef}
+              src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0&modestbranding=1&autoplay=0"
+              title="YouTube video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-[400px] block"
+              onLoad={onPlay} // ainda dispara no load (ver nota abaixo)
+            />
           </div>
         </div>
 
@@ -122,11 +112,6 @@ export default function Landing() {
           >
             Receber Solução Personalizada
           </button>
-          {!buttonEnabled && (
-            <span className="text-xs text-zinc-500">
-              O botão libera após 10s de reprodução.
-            </span>
-          )}
         </div>
       </section>
 
