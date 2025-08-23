@@ -6,83 +6,55 @@ import Script from "next/script";
 declare global {
   interface Window {
     fbq?: (...args: any[]) => void;
+    YT?: any;
+    onYouTubeIframeAPIReady?: () => void;
   }
 }
 
 export default function Landing() {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [duration, setDuration] = useState(0);
-  const [current, setCurrent] = useState(0);
-  const lastTimeRef = useRef(0); // guarda o último tempo válido (para desfazer seeks)
-  const startedRef = useRef(false); // só dispara VideoPlay 1x
+  const playerRef = useRef<any>(null);
   const [buttonEnabled, setButtonEnabled] = useState(false);
+  const startedRef = useRef(false);
   const ctaUnlockedRef = useRef(false);
 
-  // formatador de mm:ss
-  const fmt = (t: number) => {
-    const m = Math.floor(t / 60);
-    const s = Math.floor(t % 60);
-    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  };
-
-  // quando o vídeo começar a tocar pela primeira vez
-  const onPlay = () => {
-    if (!startedRef.current) {
+  // Lógica disparada quando o vídeo realmente começa (estado PLAYING)
+  const onPlayerStateChange = (event: any) => {
+    if (event.data === window.YT?.PlayerState.PLAYING && !startedRef.current) {
       startedRef.current = true;
       window.fbq?.("trackCustom", "VideoPlay");
+
+      // libera CTA após 10 segundos de reprodução
+      setTimeout(() => {
+        if (!ctaUnlockedRef.current) {
+          ctaUnlockedRef.current = true;
+          setButtonEnabled(true);
+          window.fbq?.("trackCustom", "CTAUnlockedAfter10s");
+        }
+      }, 10000);
     }
   };
 
-  // mantém o tempo e controla o desbloqueio do CTA por tempo assistido
-  const onTimeUpdate = () => {
-    if (!videoRef.current) return;
-    const t = videoRef.current.currentTime;
-    setCurrent(t);
-    lastTimeRef.current = t;
-
-    // libera CTA ao atingir 10s assistidos
-    if (!ctaUnlockedRef.current && t >= 10) {
-      ctaUnlockedRef.current = true;
-      setButtonEnabled(true);
-      window.fbq?.("trackCustom", "CTAUnlockedAfter10s");
-    }
-  };
-
-  // bloqueia tentativas de seek (mouse, teclado, arrastar timeline nativa, etc.)
-  const onSeeking = () => {
-    if (!videoRef.current) return;
-    // sempre retorna ao último tempo válido
-    if (Math.abs(videoRef.current.currentTime - lastTimeRef.current) > 0.25) {
-      videoRef.current.currentTime = lastTimeRef.current;
-    }
-  };
-
-  const onLoadedMetadata = () => {
-    if (videoRef.current?.duration) setDuration(videoRef.current.duration);
-  };
-
-  // também bloqueia atalhos de teclado que mudam o tempo (← → , .)
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (!videoRef.current) return;
-      // seta de esquerda/direita, J/L, vírgula/ponto (alguns navegadores)
-      const keys = ["ArrowLeft", "ArrowRight", "j", "l", "J", "L", ",", "."];
-      if (keys.includes(e.key)) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+    // Função chamada quando API do YouTube estiver pronta
+    window.onYouTubeIframeAPIReady = () => {
+      playerRef.current = new window.YT.Player("yt-player", {
+        videoId: "3hSPuxqynVk",
+        playerVars: { playsinline: 1 },
+        events: {
+          onStateChange: onPlayerStateChange,
+        },
+      });
     };
-    window.addEventListener("keydown", handler, { capture: true });
-    return () =>
-      window.removeEventListener("keydown", handler, { capture: true } as any);
+
+    // Carrega o script da API de forma assincrônica
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
   }, []);
 
   const handleCTA = () => {
     window.fbq?.("track", "Lead");
   };
-
-  // porcentagem para preencher a barra (somente visual)
-  const pct = duration ? Math.min(100, (current / duration) * 100) : 0;
 
   return (
     <main className="min-h-screen bg-[#0b0b0c] text-zinc-100 antialiased">
@@ -101,15 +73,6 @@ export default function Landing() {
           fbq('track', 'PageView');
         `}
       </Script>
-      <noscript>
-        <img
-          height="1"
-          width="1"
-          style={{ display: "none" }}
-          src="https://www.facebook.com/tr?id=1034863538856741&ev=PageView&noscript=1"
-          alt=""
-        />
-      </noscript>
 
       {/* Header */}
       <header className="sticky top-0 z-20 border-b border-white/5 bg-[#0b0b0c]/60 backdrop-blur">
@@ -139,39 +102,7 @@ export default function Landing() {
         {/* Video Card */}
         <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-4 shadow-2xl shadow-black/30">
           <div className="overflow-hidden rounded-xl ring-1 ring-white/10">
-            <video
-              ref={videoRef}
-              src="/meu-video.mp4" // 👉 ajuste o caminho do seu arquivo
-              playsInline
-              controls // mantém play/pause/volume/etc.
-              controlsList="nodownload noplaybackrate"
-              className="w-full h-auto block"
-              onLoadedMetadata={onLoadedMetadata}
-              onPlay={onPlay}
-              onTimeUpdate={onTimeUpdate}
-              onSeeking={onSeeking}
-            />
-          </div>
-
-          {/* Barra de progresso somente leitura */}
-          <div className="mt-3">
-            <div className="flex items-center justify-between text-xs text-zinc-400 mb-1">
-              <span>{fmt(current)}</span>
-              <span>{fmt(duration || 0)}</span>
-            </div>
-
-            {/* barra visual (sem interação) */}
-            <div
-              className="h-2 w-full rounded-full bg-zinc-700/60 relative select-none"
-              // truque para não aceitar cliques/arrastos
-              style={{ pointerEvents: "none" }}
-              aria-hidden="true"
-            >
-              <div
-                className="absolute left-0 top-0 h-2 rounded-full bg-[#d6b36c]"
-                style={{ width: `${pct}%` }}
-              />
-            </div>
+            <div id="yt-player" className="w-full h-[400px]" />
           </div>
         </div>
 
